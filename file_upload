@@ -2,6 +2,8 @@ SC does not support upload of multiple images at once (if you save file normally
 Also by upload of multiple camera images from IOS, the files get standard name image.png, so the second image will overwrite the first one if several shots are made
 for the same order (camera images go in the same order name folder).
 
+![file upload form]
+
 in your images grid , i make button NEW, which will open an upload form
 
 In this form make a data type = Label field FileUpload. This field will get proper HTML with two links , one for Camera and one for Files. 
