@@ -1,0 +1,164 @@
+SC does not support upload of multiple images at once (if you save file normally in a folder). 
+Also by upload of multiple camera images from IOS, the files get standard name image.png, so the second image will overwrite the first one if several shots are made
+for the same order (camera images go in the same order name folder).
+
+in your images grid , i make button NEW, which will open an upload form
+
+In this form make a data type = Label field FileUpload. This field will get proper HTML with two links , one for Camera and one for Files. 
+
+Form Fields:
+FileUpload - label
+FotoFile  Image type
+FotoSequenceNumber - choice of image size to be shown in the application (this is my app specific)
+SaveNew - label type
+
+
+Several form events need to be made:
+
+onLoad. in my case images are kept per order folder, kept in macro var [OrderFolder]. [ImageName] is a temp macro variable of type OUT
+
+{OrderFolder}=[OrderFolder];
+{OrderID}=[OrderId];
+[ImageName]='';
+
+$image_directory  = $_SESSION['scriptcase']['form_order_element_fotos']['glo_nm_path_imagens'].'/uploads/';
+$folder=$_SERVER['DOCUMENT_ROOT'].$image_directory.{OrderFolder}.'/' ; 
+
+if(empty({FotoId})){	
+	{FileUpload}='Camera<input type="file" name="camera" size="20" capture>
+	</br></br>Upload<input type="file" name="photo[]" size="20" accept="image/*" multiple>';
+	// hide ImagesForm
+	{SaveNew}='<a href="javascript: nm_atualiza (\'incluir\');" id="sc_b_ins_t" onclick="nm_atualiza (\'incluir\');; return false;" class="scButton_default" title="Opslaan" style="vertical-align: middle; display:inline-block; background-color: #4CAF50;">Foto toevoegen</a>';
+	}
+  
+  
+  
+  
+  
+  onValidate
+  
+  $image_directory  = $_SESSION['scriptcase']['form_order_element_fotos']['glo_nm_path_imagens'].'/uploads/';
+$folder=$_SERVER['DOCUMENT_ROOT'].$image_directory.{OrderFolder}.'/'; 
+if (!is_dir($folder)) {mkdir($folder, 0777, true);}
+
+if(isset($_FILES['photo']))
+{
+	 $countfiles=count($_FILES['photo']['name']);
+	//if no errors...
+	if($countfiles>0)
+	{
+		$valid_file = true;
+		$pref='';
+		
+		// Looping all files
+	 for($i=0;$i<$countfiles;$i++){
+	   //now is the time to modify the future file name and validate the file
+		 if ($_FILES['photo']['name'][$i]=='image.jpg'){
+			$pref=date('mdHis_'); 
+		 }
+		$new_file_name = $pref.basename($_FILES['photo']['name'][$i]); //rename file
+		if($_FILES['photo']['size'][$i] > (10240000)) //can't be larger than 1 MB
+		{
+			$valid_file = false;
+			$message = 'Oops!  Your file\'s size is to large.';
+		}
+		
+		//if the file has passed the test
+		if($valid_file)
+		{		
+			//move it to where we want it to be
+			move_uploaded_file($_FILES['photo']['tmp_name'][$i], $folder.$new_file_name);
+			[ImageName]=$new_file_name;
+			$message = "Congratulations!  Your file $new_file_name was accepted.";
+	//		echo $message;
+			
+			 
+ 
+			// Delete record
+			$delete_sql = "DELETE FROM MJOP_ORDER_ELEMENT_FOTOS WHERE OrderElementId=".[OrderElementId]." AND FotoFile='". $new_file_name ."'";
+			sc_exec_sql($delete_sql);
+			
+			if($i<$countfiles-1){
+			// Insert record
+			$insert_sql = "INSERT INTO MJOP_ORDER_ELEMENT_FOTOS (OrderElementId, InspectionCode,FotoFile,OrderId,FotoReport,FotoSequenceNumber,FotoNumber) VALUES (".[OrderElementId].",'".[InspectionCode]."','".$new_file_name."',".[OrderId].",'rapport','".{FotoSequenceNumber}."',".$i.")";
+			
+//echo $insert_sql;
+			
+			sc_exec_sql($insert_sql);	
+			}
+			
+		}
+		// sc_exit();
+
+	 }
+				
+		
+	}
+	//if there is an error...
+	else
+	{
+		//set that to be the returned message
+		$message = 'Ooops!  Your upload triggered the following error:  '.$_FILES['photo']['error'];
+	}
+}
+
+if(isset($_FILES['camera']))
+{
+	 
+	//if no errors...
+	if(!$_FILES['camera']['error'])
+	{
+		$valid_file = true;
+		$pref='';
+		//now is the time to modify the future file name and validate the file
+		 if ($_FILES['camera']['name']=='image.jpg'){
+			$pref=date('mdHis_'); 
+		 }
+		$new_file_name = $pref.basename($_FILES['camera']['name']); //rename file
+		if($_FILES['camera']['size'] > (10240000)) //can't be larger than 1 MB
+		{
+			$valid_file = false;
+			$message = 'Oops!  Your file\'s size is to large.';
+		}
+		
+		//if the file has passed the test
+		if($valid_file)
+		{		
+			//move it to where we want it to be
+			move_uploaded_file($_FILES['camera']['tmp_name'], $folder.$new_file_name);
+			[ImageName]=$new_file_name;
+			$message = 'Congratulations!  Your file was accepted.';
+		}
+	}
+	//if there is an error...
+	else
+	{
+		//set that to be the returned message
+		$message = 'Ooops!  Your upload triggered the following error:  '.$_FILES['camera']['error'];
+	}
+}
+
+
+
+
+OnBeforeInsert
+
+{FotoFile}=[ImageName];
+
+// Check for record
+$check_sql = "SELECT max(IFNULL(FotoNumber,0))"
+   . " FROM MJOP_ORDER_ELEMENT_FOTOS"
+   . " WHERE OrderElementId = '" . [OrderElementId] . "'";
+sc_lookup(rs, $check_sql);
+
+if (isset({rs[0][0]}))     // Row found
+{
+		{FotoNumber} = {rs[0][0]}+1;
+}
+
+
+onBeforeUpdate
+
+if([ImageName]>''){
+	{FotoFile}=[ImageName];
+}
