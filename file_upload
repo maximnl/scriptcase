@@ -2,7 +2,7 @@ SC does not support upload of multiple images at once (if you save file normally
 Also by upload of multiple camera images from IOS, the files get standard name image.png, so the second image will overwrite the first one if several shots are made
 for the same order (camera images go in the same order name folder).
 
-![file upload form]
+https://github.com/maximnl/scriptcase/blob/main/assets/file%20upload%20form.png
 
 in your images grid , i make button NEW, which will open an upload form
 
