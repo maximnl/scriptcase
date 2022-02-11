@@ -1,6 +1,7 @@
 // this is example of using fusioncharts with scriptcase. the source data is unknow at the moment and commentend out. 
 // it is for the purpose of data json transformation workflow. 
 // the gannt code is from fusioncharts examples. 
+// https://docs.fusioncharts.com/archive/3.11.3/gauge-and-widgets-guide/gantt-chart/creating-simple-gantt-chart.html
 // just make a blank application and paste this code into onexecute event. 
 
 
